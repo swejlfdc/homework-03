@@ -66,6 +66,24 @@ namespace maxsum
             displayTab.SelectedTab = newPage;
 
         }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // MainForm
+            // 
+            this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Name = "MainForm";
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.ResumeLayout(false);
+
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+        
+        }
     }
     class Admin{
         private static MainForm form_entity = null;

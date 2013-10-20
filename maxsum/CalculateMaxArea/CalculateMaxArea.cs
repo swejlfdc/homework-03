@@ -9,8 +9,10 @@ namespace CalculateMaxArea
 {
     public class ProcessCore
     {
-        int[,] table;
-        bool[,] select;
+        public int[,] table;
+        public bool[,] select;
+        int[,]labx,laby,hrlabx,hrlaby;
+        int pointerx,pointery,targetx,targety;
         int n, m;
         bool isHorizontal;
         public ProcessCore(string filename)
@@ -46,11 +48,129 @@ namespace CalculateMaxArea
                 isHorizontal = true;
             }
         }
-        private void Regular();
-        private void Ring();
-        private void Horizontal();
-        private void Vertical();
-        private void InRegular();
+        private void Regular()
+        {
+            Solve(n, n, m);
+            GetArea();
+        }
+        private void Ring()
+        {
+            Solve(n, n * 2, m);
+            GetArea();
+        }
+        private void Horizontal()
+        {
+            Solve(n, n, m);
+            GetArea();
+        }
+        private void Vertical()
+        {
+            Solve(n, n * 2, m);
+            GetArea();
+        }
+        private void InRegular()
+        {
+            Regular();
+            GetArea();
+        }
+        private void GetArea()
+        {
+            if (pointerx > 0)
+            {
+                for (int i = targetx; i <= pointerx; ++i)
+                    for (int j = targety; j <= pointery; ++j)
+                        select[i % n, j] = true;
+            }
+            if (pointerx < 0)
+            {
+                for (int i = targetx; i <= (-pointerx); ++i)
+                {
+                    for (int j = 0; j != targety; ++j) select[i % n, j] = true;
+                    for (int j = -pointery; j != m; ++j) select[i % n, j] = true;
+                }
+            }
+        }
+        private void Solve(int n, int lmt, int m)
+        {
+            long[,] f = new long[n, m];
+            labx = new int[n, m];
+            laby = new int[n, m];
+            hrlabx = new int[n, m];
+            hrlaby = new int[n, m];
+            const long NINF = -9999999999;
+            const long INF = 9999999999;
+            long ans = NINF, tmp = 0, seq = 0, hrAns = INF, hrTot = 0, hrMax = NINF, hrSeq = 0;//hr used for horizontal mode
+            for (int i = 0; i != table.GetLength(0); ++i)
+                for (int j = 0; j != table.GetLength(1); ++j)
+                    f[i, j] = table[i, j];
+            if (lmt != table.GetLength(0))
+                for (int i = 0; i != table.GetLength(0); ++i)
+                    for (int j = 0; j != table.GetLength(1); ++j)
+                        f[i + table.GetLength(0), j] = table[i, j];
+            for (int i = 1; i != f.GetLength(0); ++i)
+                for (int j = 0; j != m; ++j) f[i, j] += f[i - 1, j];
+
+            pointerx = 0;
+            pointery = 0;
+            int hrpointerx = 0, hrpointery = 0;
+            int hrtargetx = 0, hrtargety = 0;
+
+            for (int i = -1; i != n; ++i)
+                for (int j = i + 1; j != lmt && j - i <= n; ++j)
+                {
+                    seq = 0;
+                    for (int k = 0; k != m; ++k)
+                    {
+                        if (i == -1) tmp = f[j, k]; else tmp = f[j, k] - f[i, k];
+                        if (seq > 0) labx[j, k] = labx[j, k - 1]; else labx[j, k] = i + 1;
+                        if (seq > 0) laby[j, k] = laby[j, k - 1]; else laby[j, k] = k;
+                        if (seq > 0) seq = seq + tmp; else seq = tmp;
+                        if (ans < seq)
+                        {
+                            ans = seq;
+                            pointerx = j;
+                            pointery = k;
+                            targetx = labx[j, k];
+                            targety = laby[j, k];
+                        }
+                        if (isHorizontal)
+                        {
+                            hrTot += tmp;
+                            hrMax = Math.Max(hrMax, tmp);
+                            if (hrSeq < 0) hrlabx[j, k] = hrlabx[j, k - 1]; else hrlabx[j, k] = i + 1;
+                            if (hrSeq < 0) hrlaby[j, k] = hrlaby[j, k - 1]; else hrlaby[j, k] = k;
+                            if (hrSeq < 0) hrSeq = hrSeq + tmp; else hrSeq = tmp;
+                            if (hrAns > hrSeq)
+                            {
+                                hrAns = hrSeq;
+                                hrpointerx = j;
+                                hrpointery = k;
+                                hrtargetx = hrlabx[j, k];
+                                hrtargety = hrlaby[j, k];
+                            }
+                        }
+                    }
+                    if (isHorizontal)
+                    {
+                        if (ans < 0 && hrTot == hrAns && hrMax < 0) ;//on purpose
+                        else
+                        {
+                            if (ans < hrTot - hrAns)
+                            {
+                                ans = hrTot - hrAns;
+                                pointerx = -hrpointerx;
+                                pointery = -hrpointery;
+                                targetx = hrtargetx;
+                                targety = hrtargety;
+                            }
+                        }
+                        hrAns = INF;
+                        hrMax = NINF;
+                        hrTot = 0;
+                        hrSeq = 0;
+                    }
+                }
+        }
         public bool Calcute(string[] mode)
         {
             switch (mode.Length)
@@ -59,7 +179,7 @@ namespace CalculateMaxArea
                     Regular();
                     break;
                 case 1:
-                    switch (mode[0][2])
+                    switch (mode[0][1])
                     {
                         case 'a': InRegular(); break;
                         case 'h': isHorizontal = !isHorizontal; if (isHorizontal) Horizontal(); else Vertical(); break;
@@ -79,7 +199,13 @@ namespace CalculateMaxArea
             }
             return true;
         }
-
+        static void Main()
+        {
+            ProcessCore psc = new ProcessCore("C:\\Users\\tonyshaw\\Documents\\GitHub\\homework-03\\maxsum\\tests\\test7.txt");
+            string[] tmp = new string[1];
+            tmp[0] = "-h";
+            psc.Calcute(tmp);
+        }
     }
 }
 
