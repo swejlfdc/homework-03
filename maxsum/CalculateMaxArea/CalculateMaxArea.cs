@@ -11,12 +11,17 @@ namespace CalculateMaxArea
     {
         public int[,] table;
         public bool[,] select;
+        string[] mode;
         int[,]labx,laby,hrlabx,hrlaby;
         int pointerx,pointery,targetx,targety;
         int n, m;
         bool isHorizontal;
-        public ProcessCore(string filename)
+        public ProcessCore(string cmd)
         {
+            string[] cmdsplit = cmd.Split(' ');
+            string filename = cmdsplit[1];
+            mode = new string[cmdsplit.Length - 2];
+            for (int i = 0; i != mode.Length; ++i) mode[i] = cmdsplit[i + 2];
             string[] strs = File.ReadAllLines(@filename);
             if (strs.Length < 2) Console.WriteLine("文件格式不合法");
             string[] subStrs = strs[0].Split(',');
@@ -47,6 +52,7 @@ namespace CalculateMaxArea
                 m = tmp;
                 isHorizontal = true;
             }
+            this.Calcute();
         }
         private void Regular()
         {
@@ -86,7 +92,7 @@ namespace CalculateMaxArea
                 for (int i = targetx; i <= (-pointerx); ++i)
                 {
                     for (int j = 0; j != targety; ++j) select[i % n, j] = true;
-                    for (int j = -pointery; j != m; ++j) select[i % n, j] = true;
+                    for (int j = -pointery+1; j != m; ++j) select[i % n, j] = true;
                 }
             }
         }
@@ -171,7 +177,7 @@ namespace CalculateMaxArea
                     }
                 }
         }
-        public bool Calcute(string[] mode)
+        public bool Calcute()
         {
             switch (mode.Length)
             {
@@ -201,10 +207,7 @@ namespace CalculateMaxArea
         }
         static void Main()
         {
-            ProcessCore psc = new ProcessCore("C:\\Users\\tonyshaw\\Documents\\GitHub\\homework-03\\maxsum\\tests\\test7.txt");
-            string[] tmp = new string[1];
-            tmp[0] = "-h";
-            psc.Calcute(tmp);
+            ProcessCore psc = new ProcessCore("maxsum.exe C:\\Users\\tonyshaw\\Documents\\GitHub\\homework-03\\maxsum\\tests\\test7.txt -h");
         }
     }
 }
