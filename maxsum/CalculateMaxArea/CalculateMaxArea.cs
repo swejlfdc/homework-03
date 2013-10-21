@@ -12,13 +12,16 @@ namespace CalculateMaxArea
         public int[,] table;
         public bool[,] select;
         string[] mode;
-        int[,]labx,laby,hrlabx,hrlaby;
-        int pointerx,pointery,targetx,targety;
+        int[,] labx, laby, hrlabx, hrlaby;
+        int pointerx, pointery, targetx, targety;
         int n, m;
         bool isHorizontal;
+        public int cnt;
         public ProcessCore(string cmd)
         {
-            string[] cmdsplit = cmd.Split(' ');
+            string[] cmdsplit = cmd.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            //cnt = cmdsplit.Length;
+            //return;
             string filename = cmdsplit[1];
             mode = new string[cmdsplit.Length - 2];
             for (int i = 0; i != mode.Length; ++i) mode[i] = cmdsplit[i + 2];
@@ -92,7 +95,7 @@ namespace CalculateMaxArea
                 for (int i = targetx; i <= (-pointerx); ++i)
                 {
                     for (int j = 0; j != targety; ++j) select[i % n, j] = true;
-                    for (int j = -pointery+1; j != m; ++j) select[i % n, j] = true;
+                    for (int j = -pointery + 1; j != m; ++j) select[i % n, j] = true;
                 }
             }
         }

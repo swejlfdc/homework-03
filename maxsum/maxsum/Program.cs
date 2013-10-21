@@ -9,6 +9,9 @@ using System.IO;
 using System.Data;
 using System.Drawing;
 using CalculateMaxArea;
+#if TRACE
+using System.Diagnostics;
+#endif
 
 namespace maxsum
 {
@@ -24,8 +27,15 @@ namespace maxsum
                 for (int i = 0; i < TABLE.GetLength(1); i++)
                 {
                     dt.Columns.Add(i.ToString(), typeof(int));
+                    //this.BeginInvoke(new MethodInvoker(() => { dataView.Columns.Add("1", "1"); }));
                     dataView.Columns.Add(i.ToString(), i.ToString());
+                    //dataView.Columns[i].Frozen = false;
                 }
+                /*
+                DataGridViewTextBoxColumn _column = new DataGridViewTextBoxColumn();
+                _column.Frozen = false;
+                dataView.Columns.AddRange(new DataGridViewColumn[] { _column });
+                 * */
                 dt.Clear();
                 for (int i = 0; i < TABLE.GetLength(0); i++)
                 {
@@ -56,7 +66,24 @@ namespace maxsum
                 dataView.ColumnHeadersVisible = false;
                 dataView.RowHeadersVisible = false;
                 dataView.AllowUserToAddRows = false;
-                newPage.Controls.Add(dataView);
+                dataView.Dock = DockStyle.Fill;
+                dataView.ScrollBars = ScrollBars.Both;
+                //dataView.AutoResizeColumns();
+                //dataView.AutoResizeRows();
+                this.displayTab.BeginInvoke(new MethodInvoker(() => {
+                    newPage.Controls.Add(dataView);
+                }));
+                /*
+                Panel p = new Panel();
+                p.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                    | System.Windows.Forms.AnchorStyles.Left)
+                    | System.Windows.Forms.AnchorStyles.Right)));
+                p.Controls.Add(dataView);
+                this.BeginInvoke(new MethodInvoker(() =>
+                {
+                    newPage.Controls.Add(p);
+                }));
+                 * */
                 //dataView.Refresh();
                 //dataView.Update();
                 //dataView.ResetBindings();               
@@ -100,7 +127,8 @@ namespace maxsum
         }
         public void Server()
         {
-            Thread.Sleep(500);
+            //Thread.Sleep(500);
+            while (form_entity == null) Thread.Sleep(100);
             form_entity.Disposed += new System.EventHandler(this.stopServer);
             for (;!_shouldStop;)
                 {
@@ -129,7 +157,6 @@ namespace maxsum
                 string[] imp = info.Split(';');
                 Environment.CurrentDirectory = imp[0];
                 core = new ProcessCore(imp[1]);
-                core.Calcute();
                 form_entity.TopLevelControl.BeginInvoke(
                         new InvokeDelegate(form_entity.AddTab), 
                         core.table,
@@ -145,7 +172,7 @@ namespace maxsum
             try{
                 pipeClient.Connect(500);
             } 
-            catch (TimeoutException e) {
+            catch (TimeoutException ) {
                 FormThread = new Thread(this.getForm);
                 ServerThread = new Thread(this.Server);
                 FormThread.SetApartmentState (ApartmentState.STA);
@@ -155,7 +182,7 @@ namespace maxsum
                 {
                     pipeClient.Connect(1000);
                 }
-                catch (TimeoutException e2)
+                catch (TimeoutException )
                 {
                     Console.WriteLine("Error");
                     return;
@@ -181,6 +208,8 @@ namespace maxsum
         /// </summary>
         [STAThread]
         static void Main() {
+            Trace.WriteLine("nimas");
+            Console.ReadLine();
             new Admin().Run();
         }
     }

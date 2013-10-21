@@ -39,14 +39,15 @@
             this.displayTab.Location = new System.Drawing.Point(12, 12);
             this.displayTab.Name = "displayTab";
             this.displayTab.SelectedIndex = 0;
-            this.displayTab.Size = new System.Drawing.Size(429, 296);
+            this.displayTab.Size = new System.Drawing.Size(606, 314);
             this.displayTab.TabIndex = 0;
+            this.displayTab.SelectedIndexChanged += new System.EventHandler(this.displayTab_SelectedIndexChanged);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(468, 331);
+            this.ClientSize = new System.Drawing.Size(645, 349);
             this.Controls.Add(this.displayTab);
             this.Name = "MainForm";
             this.Text = "MainForm";

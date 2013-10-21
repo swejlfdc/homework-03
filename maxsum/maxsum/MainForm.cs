@@ -15,6 +15,7 @@ namespace maxsum
         public MainForm()
         {
             InitializeComponent();
+            CheckForIllegalCrossThreadCalls = false;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -27,6 +28,11 @@ namespace maxsum
 
         }
         private void tabPage2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void displayTab_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
