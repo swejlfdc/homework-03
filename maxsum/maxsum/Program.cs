@@ -8,6 +8,7 @@ using System.IO.Pipes;
 using System.IO;
 using System.Data;
 using System.Drawing;
+using CalculateMaxArea;
 
 namespace maxsum
 {
@@ -66,24 +67,6 @@ namespace maxsum
             displayTab.SelectedTab = newPage;
 
         }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            // 
-            // MainForm
-            // 
-            this.ClientSize = new System.Drawing.Size(284, 262);
-            this.Name = "MainForm";
-            this.Load += new System.EventHandler(this.MainForm_Load);
-            this.ResumeLayout(false);
-
-        }
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-        
-        }
     }
     class Admin{
         private static MainForm form_entity = null;
@@ -91,6 +74,7 @@ namespace maxsum
         Thread FormThread = null;
         NamedPipeServerStream pipeServer = null;
         bool _shouldStop = false;
+        ProcessCore core;
         public delegate void InvokeDelegate(int[,] TABLEs, bool[,] select);
 
         void stopServer(object sender, EventArgs e)
@@ -124,6 +108,7 @@ namespace maxsum
                 pipeServer.WaitForConnection();
                 if (_shouldStop) break;
                 BinaryReader dataReader = new BinaryReader(pipeServer);
+                /*
                 int row_size, col_size;
                 row_size = dataReader.ReadInt32();
                 col_size = dataReader.ReadInt32();
@@ -139,10 +124,16 @@ namespace maxsum
                     {
                         select[i, j] = dataReader.ReadBoolean();
                     }
+                 * */
+                string info = dataReader.ReadString();
+                string[] imp = info.Split(';');
+                Environment.CurrentDirectory = imp[0];
+                core = new ProcessCore(imp[1]);
+                core.Calcute();
                 form_entity.TopLevelControl.BeginInvoke(
                         new InvokeDelegate(form_entity.AddTab), 
-                        data,
-                        select
+                        core.table,
+                        core.select
                     );
                 dataReader.Close();
             }
@@ -171,11 +162,13 @@ namespace maxsum
                 }
             }
             BinaryWriter pipeWriter = new BinaryWriter(pipeClient);
-
+            /*
             pipeWriter.Write(3);
             pipeWriter.Write((int)3);
             for (int i = 0; i < 9; ++i) pipeWriter.Write(i);
             for (int i = 0; i < 9; ++i) pipeWriter.Write((i & 1) == 0);
+            * */
+            pipeWriter.Write(Environment.CurrentDirectory + ";" + Environment.CommandLine);
             pipeWriter.Flush();
             pipeWriter.Close();
             //pipeClient.Close();
@@ -187,7 +180,7 @@ namespace maxsum
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main(string args[]) {
+        static void Main() {
             new Admin().Run();
         }
     }
