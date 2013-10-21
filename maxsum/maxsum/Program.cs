@@ -5,36 +5,60 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 using System.IO.Pipes;
+using System.IO;
 using System.Data;
+using System.Drawing;
 
 namespace maxsum
 {
     partial class MainForm : Form
     {
-        public void AddTab()
+        public void AddTab(int[,] TABLE, bool[,] select)
         {
             System.Windows.Forms.TabPage newPage = new TabPage();
             {
                 DataGridView dataView = new DataGridView();
-                int[,] TABLE = new int[,] { { 1, 2, 3 }, { 4, 5, 6 } };
                 DataTable dt = new DataTable();
+                BindingSource bs = new BindingSource();
                 for (int i = 0; i < TABLE.GetLength(1); i++)
+                {
                     dt.Columns.Add(i.ToString(), typeof(int));
+                    dataView.Columns.Add(i.ToString(), i.ToString());
+                }
+                dt.Clear();
                 for (int i = 0; i < TABLE.GetLength(0); i++)
                 {
+                    dataView.Rows.Add();
                     DataRow dr = dt.NewRow();
-                    for (int j = 0; j < TABLE.GetLength(1); j++)
+                    for (int j = 0; j < TABLE.GetLength(1); j++) {
                         dr[j] = TABLE[i, j];
+                        dataView.CurrentCell = dataView[j, i];
+                        dataView.CurrentCell.Value = TABLE[i, j];
+                        if (select[i, j])
+                        {
+                            
+                            //dataView.BeginEdit(true);
+                            dataView.CurrentCell.Style.BackColor = Color.Yellow;
+                            //dataView.EndEdit();
+                        }
+                    }
                     dt.Rows.Add(dr);
                 }
-                dataView.DataSource = dt;
+
+                bs.DataSource = dt;                
+                //dataView.DataSource = bs;
+                dataView.AutoGenerateColumns = true;
                 dataView.Visible = true;
                 dataView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
+                    | System.Windows.Forms.AnchorStyles.Left)
+                    | System.Windows.Forms.AnchorStyles.Right)));
                 dataView.ColumnHeadersVisible = false;
                 dataView.RowHeadersVisible = false;
+                dataView.AllowUserToAddRows = false;
                 newPage.Controls.Add(dataView);
+                //dataView.Refresh();
+                //dataView.Update();
+                //dataView.ResetBindings();               
             }
             displayTab.Controls.Add(newPage);
             newPage.Name = "file";
@@ -67,7 +91,7 @@ namespace maxsum
         Thread FormThread = null;
         NamedPipeServerStream pipeServer = null;
         bool _shouldStop = false;
-        public delegate void InvokeDelegate();
+        public delegate void InvokeDelegate(int[,] TABLEs, bool[,] select);
 
         void stopServer(object sender, EventArgs e)
         {
@@ -94,17 +118,36 @@ namespace maxsum
         {
             Thread.Sleep(500);
             form_entity.Disposed += new System.EventHandler(this.stopServer);
-            pipeServer = new NamedPipeServerStream("maxsum_pipe", PipeDirection.In, 2);
-            for (pipeServer.WaitForConnection(); 
-                !_shouldStop;
-                pipeServer.WaitForConnection())
-            {
-                form_entity.TopLevelControl.BeginInvoke(new InvokeDelegate(form_entity.AddTab));
-                pipeServer.Disconnect();
+            for (;!_shouldStop;)
+                {
+                pipeServer = new NamedPipeServerStream("maxsum_pipe", PipeDirection.In, 3);
+                pipeServer.WaitForConnection();
+                if (_shouldStop) break;
+                BinaryReader dataReader = new BinaryReader(pipeServer);
+                int row_size, col_size;
+                row_size = dataReader.ReadInt32();
+                col_size = dataReader.ReadInt32();
+                int[,] data = new int[row_size, col_size];
+                bool[,] select = new bool[row_size, col_size];
+                for (int i = 0; i < row_size; ++i)
+                    for (int j = 0; j < col_size; ++j)
+                    {
+                        data[i, j] = dataReader.ReadInt32();
+                    }
+                for (int i = 0; i < row_size; ++i)
+                    for (int j = 0; j < col_size; ++j)
+                    {
+                        select[i, j] = dataReader.ReadBoolean();
+                    }
+                form_entity.TopLevelControl.BeginInvoke(
+                        new InvokeDelegate(form_entity.AddTab), 
+                        data,
+                        select
+                    );
+                dataReader.Close();
             }
         }
 
-        [STAThreadAttribute]
         public void Run()
         {
             NamedPipeClientStream pipeClient = new NamedPipeClientStream(".", "maxsum_pipe", PipeDirection.Out);
@@ -126,8 +169,16 @@ namespace maxsum
                     Console.WriteLine("Error");
                     return;
                 }
-                pipeClient.Dispose();
             }
+            BinaryWriter pipeWriter = new BinaryWriter(pipeClient);
+
+            pipeWriter.Write(3);
+            pipeWriter.Write((int)3);
+            for (int i = 0; i < 9; ++i) pipeWriter.Write(i);
+            for (int i = 0; i < 9; ++i) pipeWriter.Write((i & 1) == 0);
+            pipeWriter.Flush();
+            pipeWriter.Close();
+            //pipeClient.Close();
         }
     }
     static class Program
@@ -135,8 +186,8 @@ namespace maxsum
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThreadAttribute]
-        static void Main() {
+        [STAThread]
+        static void Main(string args[]) {
             new Admin().Run();
         }
     }
