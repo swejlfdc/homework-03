@@ -5,61 +5,41 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 using System.IO.Pipes;
-using System.IO;
 using System.Data;
+<<<<<<< HEAD
 using System.Drawing;
 using CalculateMaxArea;
+=======
+>>>>>>> parent of 2f14274... Revert "Revert "finish the function of communication between process""
 
 namespace maxsum
 {
     partial class MainForm : Form
     {
-        public void AddTab(int[,] TABLE, bool[,] select)
+        public void AddTab()
         {
             System.Windows.Forms.TabPage newPage = new TabPage();
             {
                 DataGridView dataView = new DataGridView();
+                int[,] TABLE = new int[,] { { 1, 2, 3 }, { 4, 5, 6 } };
                 DataTable dt = new DataTable();
-                BindingSource bs = new BindingSource();
                 for (int i = 0; i < TABLE.GetLength(1); i++)
-                {
                     dt.Columns.Add(i.ToString(), typeof(int));
-                    dataView.Columns.Add(i.ToString(), i.ToString());
-                }
-                dt.Clear();
                 for (int i = 0; i < TABLE.GetLength(0); i++)
                 {
-                    dataView.Rows.Add();
                     DataRow dr = dt.NewRow();
-                    for (int j = 0; j < TABLE.GetLength(1); j++) {
+                    for (int j = 0; j < TABLE.GetLength(1); j++)
                         dr[j] = TABLE[i, j];
-                        dataView.CurrentCell = dataView[j, i];
-                        dataView.CurrentCell.Value = TABLE[i, j];
-                        if (select[i, j])
-                        {
-                            
-                            //dataView.BeginEdit(true);
-                            dataView.CurrentCell.Style.BackColor = Color.Yellow;
-                            //dataView.EndEdit();
-                        }
-                    }
                     dt.Rows.Add(dr);
                 }
-
-                bs.DataSource = dt;                
-                //dataView.DataSource = bs;
-                dataView.AutoGenerateColumns = true;
+                dataView.DataSource = dt;
                 dataView.Visible = true;
                 dataView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                    | System.Windows.Forms.AnchorStyles.Left)
-                    | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
                 dataView.ColumnHeadersVisible = false;
                 dataView.RowHeadersVisible = false;
-                dataView.AllowUserToAddRows = false;
                 newPage.Controls.Add(dataView);
-                //dataView.Refresh();
-                //dataView.Update();
-                //dataView.ResetBindings();               
             }
             displayTab.Controls.Add(newPage);
             newPage.Name = "file";
@@ -74,8 +54,12 @@ namespace maxsum
         Thread FormThread = null;
         NamedPipeServerStream pipeServer = null;
         bool _shouldStop = false;
+<<<<<<< HEAD
         ProcessCore core;
         public delegate void InvokeDelegate(int[,] TABLEs, bool[,] select);
+=======
+        public delegate void InvokeDelegate();
+>>>>>>> parent of 2f14274... Revert "Revert "finish the function of communication between process""
 
         void stopServer(object sender, EventArgs e)
         {
@@ -102,6 +86,7 @@ namespace maxsum
         {
             Thread.Sleep(500);
             form_entity.Disposed += new System.EventHandler(this.stopServer);
+<<<<<<< HEAD
             for (;!_shouldStop;)
                 {
                 pipeServer = new NamedPipeServerStream("maxsum_pipe", PipeDirection.In, 3);
@@ -136,9 +121,19 @@ namespace maxsum
                         core.select
                     );
                 dataReader.Close();
+=======
+            pipeServer = new NamedPipeServerStream("maxsum_pipe", PipeDirection.In, 2);
+            for (pipeServer.WaitForConnection(); 
+                !_shouldStop;
+                pipeServer.WaitForConnection())
+            {
+                form_entity.TopLevelControl.BeginInvoke(new InvokeDelegate(form_entity.AddTab));
+                pipeServer.Disconnect();
+>>>>>>> parent of 2f14274... Revert "Revert "finish the function of communication between process""
             }
         }
 
+        [STAThreadAttribute]
         public void Run()
         {
             NamedPipeClientStream pipeClient = new NamedPipeClientStream(".", "maxsum_pipe", PipeDirection.Out);
@@ -160,7 +155,9 @@ namespace maxsum
                     Console.WriteLine("Error");
                     return;
                 }
+                pipeClient.Dispose();
             }
+<<<<<<< HEAD
             BinaryWriter pipeWriter = new BinaryWriter(pipeClient);
             /*
             pipeWriter.Write(3);
@@ -172,6 +169,8 @@ namespace maxsum
             pipeWriter.Flush();
             pipeWriter.Close();
             //pipeClient.Close();
+=======
+>>>>>>> parent of 2f14274... Revert "Revert "finish the function of communication between process""
         }
     }
     static class Program
@@ -179,7 +178,11 @@ namespace maxsum
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+<<<<<<< HEAD
         [STAThread]
+=======
+        [STAThreadAttribute]
+>>>>>>> parent of 2f14274... Revert "Revert "finish the function of communication between process""
         static void Main() {
             new Admin().Run();
         }
