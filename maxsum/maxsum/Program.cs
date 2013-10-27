@@ -17,7 +17,7 @@ namespace maxsum
 {
     partial class MainForm : Form
     {
-        public void AddTab(int[,] TABLE, bool[,] select)
+        public void AddTab(string TabName,int[,] TABLE, bool[,] select)
         {
             System.Windows.Forms.TabPage newPage = new TabPage();
             {
@@ -89,8 +89,8 @@ namespace maxsum
                 //dataView.ResetBindings();               
             }
             displayTab.Controls.Add(newPage);
-            newPage.Name = "file";
-            newPage.Text = "file";
+            newPage.Name = TabName;
+            newPage.Text = TabName;
             displayTab.SelectedTab = newPage;
 
         }
@@ -102,7 +102,7 @@ namespace maxsum
         NamedPipeServerStream pipeServer = null;
         bool _shouldStop = false;
         ProcessCore core;
-        public delegate void InvokeDelegate(int[,] TABLEs, bool[,] select);
+        public delegate void InvokeDelegate(string name, int[,] TABLEs, bool[,] select);
 
         void stopServer(object sender, EventArgs e)
         {
@@ -157,8 +157,12 @@ namespace maxsum
                 string[] imp = info.Split(';');
                 Environment.CurrentDirectory = imp[0];
                 core = new ProcessCore(imp[1]);
+                string[] args = imp[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] _name = args[1].Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+                string name = _name[_name.Length - 1];                
                 form_entity.TopLevelControl.BeginInvoke(
                         new InvokeDelegate(form_entity.AddTab), 
+                        name,
                         core.table,
                         core.select
                     );
@@ -207,7 +211,7 @@ namespace maxsum
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main() {
+        static void Main(string[] Args) {
             Trace.WriteLine("nimas");
             Console.ReadLine();
             new Admin().Run();

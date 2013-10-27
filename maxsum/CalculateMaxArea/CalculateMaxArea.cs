@@ -9,13 +9,13 @@ namespace CalculateMaxArea
 {
     public class ProcessCore
     {
-        public int[,] table;
-        public bool[,] select;
+        public int[,] table;//数据在这里
+        public bool[,] select;//选择的块需要放在这里
         string[] mode;
         int[,] labx, laby, hrlabx, hrlaby;
         int pointerx, pointery, targetx, targety;
-        int n, m;
-        bool isHorizontal;
+        int n, m;//n*m矩阵
+        bool isHorizontal;//是否是需要竖直方向相连接
         public int cnt;
         public ProcessCore(string cmd)
         {
@@ -77,14 +77,70 @@ namespace CalculateMaxArea
             Solve(n, n * 2, m);
             GetArea();
         }
+        void colorBlock(int[,] mat, int row, int col, int color)
+        {
+            int row_size, col_size;
+            row_size = mat.GetLength(0);
+            col_size = mat.GetLength(1);
+            Queue<KeyValuePair<int, int>> Q = new Queue<KeyValuePair<int,int>>() ;
+            Q.Enqueue(new KeyValuePair<int,int>(row, col));
+            while (Q.Count > 0)
+            {
+                KeyValuePair<int, int> cur = Q.Dequeue();
+                int r = cur.Key, c = cur.Value;
+                if (r < 0 || r >= row_size || c < 0 || c >= col_size) continue;
+                if (mat[r,c] == -1)
+                {
+                    mat[r,c] = color;
+                    Q.Enqueue(new KeyValuePair<int, int>(r - 1, c));
+                    Q.Enqueue(new KeyValuePair<int, int>(r, c - 1));
+                    Q.Enqueue(new KeyValuePair<int, int>(r + 1, c));
+                    Q.Enqueue(new KeyValuePair<int, int>(r, c + 1));
+                }
+            }
+        }
+
         private void InRegular()
         {
-            Regular();
-            GetArea();
+            int row_size = table.GetLength(0), col_size = table.GetLength(1);
+            int[,] map = new int[row_size, col_size];
+            int[,] mat = table;
+            //for(int i = 0; i < row_size; ++i) memset(map[i], 0, sizeof(int) * col_size);
+
+            for (int i = 0; i < row_size; ++i)
+                for (int j = 0; j < col_size; ++j)
+                    map[i,j] = (mat[i,j] >= 0) ? -1 : 0;
+
+            //color positive block
+            int block_num = 0;
+            for (int i = 0; i < row_size; ++i)
+                for (int j = 0; j < col_size; ++j)
+                    if (map[i,j] == -1) colorBlock(map, i, j, ++block_num);
+            //count block value 
+            int[] block = new int[block_num + 1];
+            Array.Clear(block, 0, block.Length);
+            for (int i = 0; i < row_size; ++i)
+                for (int j = 0; j < col_size; ++j)
+                    block[map[i,j]] += mat[i,j];
+            int ret = -0x3fffffff, pos = 0;
+            for (int i = 1; i <= block_num; ++i)
+                if (block[i] > ret)
+                {
+                    ret = block[i];
+                    pos = i;
+                }
+
+            for (int i = 0; i < row_size; ++i)
+                for (int j = 0; j < col_size; ++j)
+                    if (map[i, j] == pos)
+                        select[i, j] = true;
+                    else
+                        select[i, j] = false;
+            //return ret;
         }
         private void GetArea()
         {
-            if (pointerx > 0)
+            if (pointerx >= 0)
             {
                 for (int i = targetx; i <= pointerx; ++i)
                     for (int j = targety; j <= pointery; ++j)
@@ -101,11 +157,11 @@ namespace CalculateMaxArea
         }
         private void Solve(int n, int lmt, int m)
         {
-            long[,] f = new long[n, m];
-            labx = new int[n, m];
-            laby = new int[n, m];
-            hrlabx = new int[n, m];
-            hrlaby = new int[n, m];
+            long[,] f = new long[lmt, m];
+            labx = new int[lmt, m];
+            laby = new int[lmt, m];
+            hrlabx = new int[lmt, m];
+            hrlaby = new int[lmt, m];
             const long NINF = -9999999999;
             const long INF = 9999999999;
             long ans = NINF, tmp = 0, seq = 0, hrAns = INF, hrTot = 0, hrMax = NINF, hrSeq = 0;//hr used for horizontal mode
@@ -198,6 +254,7 @@ namespace CalculateMaxArea
                     }
                     break;
                 case 2:
+                    isHorizontal = !isHorizontal;
                     Ring();
                     break;
                 case 3:
